@@ -1,0 +1,24 @@
+Microsoft (R) COFF/PE Dumper Version 14.11.25507.1
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file bgfx.lib
+
+File Type: LIBRARY
+
+  Summary
+
+           8 .CRT$XCU
+       C14B1 .bss
+        3D94 .data
+      2DD348 .debug$S
+         840 .debug$T
+        187D .drectve
+        56AC .pdata
+       1C0F9 .rdata
+          14 .text$di
+       75334 .text$mn
+          39 .text$x
+          1E .text$yd
+           4 .tls$
+        797C .xdata
