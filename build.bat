@@ -8,6 +8,7 @@ mkdir build > NUL 2>NUL
 pushd build
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %bits% > NUL 2>NUL
 popd
+call "make_shader.bat"
 cd build
 ctime -begin bgfx.ctm
 cl %CompilerFlags%  ..\code\main.cpp  /I..\deps\include  /link -incremental:no  /LIBPATH:%LibraryLocation% bgfx-shared-libRelease.lib SDL2.lib SDL2_ttf.lib SDL2main.lib Shell32.lib DelayImp.lib gdi32.lib psapi.lib user32.lib kernel32.lib d3d11.lib   %LinkerFlags%
