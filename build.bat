@@ -1,6 +1,6 @@
 @echo off
 set CompilerFlags= /MTd /Z7 /FC /wd4221 /nologo 
-set LinkerFlags=-subsystem:windows
+set LinkerFlags=-subsystem:console
 set bits=x64
 set LibraryLocation=..\deps\lib\%bits%\
 

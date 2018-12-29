@@ -15,8 +15,8 @@ set LIST=
 for /D %%i in (shader\*) do set LIST=!LIST! %%i
 set LIST=%LIST:shader\=%
 for %%i in (%LIST%) do (
-tools\shaderc.exe -f shader\%%i\fs_%%i.sc -o build\shader\fs_%%i.bin --type f %FS_FLAGS% --disasm --debug --varyingdef shader\%%i\varying.def.sc -i shader\
-tools\shaderc.exe -f shader\%%i\vs_%%i.sc -o build\shader\vs_%%i.bin --type v %VS_FLAGS% --disasm --debug --varyingdef shader\%%i\varying.def.sc -i shader\
+tools\shaderc.exe -f shader\%%i\fs_%%i.sc -o build\shader\fs_%%i.bin --type f %FS_FLAGS% --debug --disasm --varyingdef shader\%%i\varying.def.sc -i shader\
+tools\shaderc.exe -f shader\%%i\vs_%%i.sc -o build\shader\vs_%%i.bin --type v %VS_FLAGS% --debug --disasm --varyingdef shader\%%i\varying.def.sc -i shader\
 )
 ENDLOCAL
 echo Shaders Compiled
