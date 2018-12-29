@@ -15,6 +15,9 @@
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define ARRAYCOUNT(arr) sizeof(arr)/sizeof(arr[0])
 
 typedef struct
@@ -47,10 +50,7 @@ typedef struct VertexPostionColor
     float X;
     float Y;
     float Z;
-    float R;
-    float G;
-    float B;
-    float A;
+    uint32_t color;
 }VertexPostionColor;
 
 typedef struct VertexPostionColorTexture
@@ -60,10 +60,7 @@ typedef struct VertexPostionColorTexture
     float Z;
     float U;
     float V;
-    float R;
-    float G;
-    float B;
-    float A;
+    uint32_t color;
 }VertexPostionColorTexture;
 
 typedef enum RenderCommandType
@@ -127,7 +124,7 @@ VertexPostionColorDeclaration()
     bgfx_vertex_decl_t Declaration = {};
     bgfx_vertex_decl_begin(&Declaration,BGFX_RENDERER_TYPE_NOOP);
     bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_POSITION, 3, BGFX_ATTRIB_TYPE_FLOAT,false,false);
-    bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_FLOAT,false, false);
+    bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true,true);
     bgfx_vertex_decl_end(&Declaration);
     return Declaration;
 };
@@ -138,8 +135,8 @@ VertexPostionColorTextureDeclaration()
     bgfx_vertex_decl_t Declaration = {};
     bgfx_vertex_decl_begin(&Declaration,BGFX_RENDERER_TYPE_NOOP);
     bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_POSITION, 3, BGFX_ATTRIB_TYPE_FLOAT,false,false);
-    bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT,false, false);
-    bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_FLOAT,false, false);
+    bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT,false,false);
+    bgfx_vertex_decl_add(&Declaration,BGFX_ATTRIB_COLOR0,  4, BGFX_ATTRIB_TYPE_UINT8, true,true);
     bgfx_vertex_decl_end(&Declaration);
     return Declaration;
 };
@@ -313,11 +310,11 @@ bgfx_program_handle_t
 LoadShaderProgram(char *shadername)
 {
     char buf[256];
-    strcat(buf,"shader\vs_");
+    strcpy(buf,"shader\vs_");
     strcat(buf,shadername);
     strcat(buf,".bin");
     FileHandle VSFile = ReadEntireFile(buf);
-    strcpy(buf,"");
+    buf[0] =0;
     strcat(buf,"shader\fs_");
     strcat(buf,shadername);
     strcat(buf,".bin");
@@ -328,22 +325,25 @@ LoadShaderProgram(char *shadername)
     return Program;
 }
 
-
 bgfx_texture_handle_t
 LoadTexture(char *name)
 {
     char buf[256];
-    strcat(buf,"texture\\");
-    strcat(buf,shadername);
-    strcat(buf,".png");
-    FileHandle FSFile = ReadEntireFile(buf);
-    bgfx_program_handle_t Texture = bgfx_create_texture_2d(,,false,1,);
+    strcpy(buf,"texture\\");
+    strcat(buf,name);
+    FileHandle BitmapFile = ReadEntireFile(buf);
+    int x = 0;
+    int y = 0;
+    int channel = 0;
+    stbi_uc *bitmapdata = stbi_load_from_memory((stbi_uc *)BitmapFile.Data,BitmapFile.Size,&x,&y,&channel,4);  
+    bgfx_texture_handle_t Texture = bgfx_create_texture_2d(x,y,false,1,BGFX_TEXTURE_FORMAT_RGBA8,BGFX_TEXTURE_SRGB |BGFX_SAMPLER_U_CLAMP| BGFX_SAMPLER_MIP_POINT | BGFX_SAMPLER_V_CLAMP | BGFX_SAMPLER_W_CLAMP | BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT,bgfx_make_ref(bitmapdata,x*y*4));
     return Texture;
 }
 
-static bgfx_vertex_decl_t VertexPostionColorTextureDecl = VertexPostionColorTextureDeclaration();
 
+static bgfx_vertex_decl_t VertexPostionColorTextureDecl = VertexPostionColorTextureDeclaration();
 static bgfx_vertex_decl_t VertexPostionColorDecl = VertexPostionColorDeclaration();
+static bgfx_vertex_decl_t VertexPostionTextureDecl = VertexPostionTextureDeclaration();
 
 int
 main(int argc,char **argv)
@@ -351,7 +351,7 @@ main(int argc,char **argv)
 
     RendererContext *Renderer = (RendererContext *)calloc(sizeof(RendererContext),1);
     RendererInit(WINDOW_WIDTH,WINDOW_HEIGHT,Renderer);
-
+    
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
     SDL_DisplayMode CurrentDisplay;
@@ -378,23 +378,23 @@ main(int argc,char **argv)
     bgfx_platform_data_t pd = {};
     pd.nwh = info.info.win.window;
     bgfx_set_platform_data(&pd);
-    uint32_t reset  = 0;// BGFX_RESET_VSYNC ;
+    uint32_t reset  =  BGFX_RESET_VSYNC ;
     bgfx_init_t InitData = {};
-    InitData.type = BGFX_RENDERER_TYPE_DIRECT3D9;
+    InitData.type = BGFX_RENDERER_TYPE_DIRECT3D11;
     uint32_t debug  = BGFX_DEBUG_TEXT;
     bgfx_init_ctor(&InitData);
     bgfx_init(&InitData);
     bgfx_reset(Renderer->Settings.Width, Renderer->Settings.Height, reset, InitData.resolution.format);
     bgfx_set_debug(debug);
-    bgfx_set_view_clear(0,BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH,0xffffffff,1,0);       
     bgfx_set_view_rect(0, 0, 0, Renderer->Settings.Width, Renderer->Settings.Height);    
+    bgfx_set_view_clear(0,BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH,0x303030ff,1,0);       
     
     VertexPostionColor QuadVertices[] =
         {
-            { -1,  -1,  0.f, 1 ,0,1,1 },
-            { 1,  -1,  0.f, 1,0,1,1 },
-            { -1, 1,  0.f, 1,0,1,1 },
-            { 1, 1,  0.f, 1,0,1,1 },
+            { -1,  -1,  0.f, 0xffffffff },
+            { 1,  -1,  0.f, 0xffffffff },
+            { -1, 1,  0.f,0xffffffff },
+            { 1, 1,  0.f,0xffffffff },
         };
 
     
@@ -408,26 +408,26 @@ main(int argc,char **argv)
 
     VertexPostionColorTexture QuadVerticesColorTextured[] =
         {
-            { -1,-1,0, 0 ,0 ,1,1,1,1},
-            { 1,-1,0, 1,0 ,1,1,1,1},
-            { -1,1,0, 0,1 ,1,1,1,1},
-            { 1,1,0, 1,1 ,1,1,1,1},
+            { -0.9,-0.9,0.9, 0,0 ,0xffffffff},
+            { 0.9,-0.9,0.9, 1,0 ,0xffffffff},
+            { -0.9,0.9,0.9, 0,1 ,0xffffffff},
+            { 0.9,0.9,0.9, 1,1 ,0xffffffff},
         };
 
 
     const uint16_t QuadTriStrip[] =
         {
-            0, 1, 2,3
+            0, 3, 2,
+            0, 1, 3
         };
-
-    bgfx_texture_handle_t Texture = LoadTexture("");
+    
+    bgfx_texture_handle_t Texture = LoadTexture("map_02.png");
     bgfx_vertex_buffer_handle_t VertexBuffer = bgfx_create_vertex_buffer(bgfx_make_ref(QuadVerticesColorTextured, sizeof(QuadVerticesColorTextured)),
                                              &VertexPostionColorTextureDecl,BGFX_BUFFER_NONE);
     bgfx_index_buffer_handle_t IndexBuffer = bgfx_create_index_buffer(bgfx_make_ref(QuadTriStrip, sizeof(QuadTriStrip)),BGFX_BUFFER_NONE);
-    bgfx_uniform_handle_t s_texColor = bgfx_create_uniform("s_texColor", BGFX_UNIFORM_TYPE_INT1,0);
+    bgfx_uniform_handle_t s_texColor = bgfx_create_uniform("s_texColor", BGFX_UNIFORM_TYPE_INT1,1);
     bgfx_program_handle_t Program = LoadShaderProgram("texquadcolor");    
-    
-    double t = 0;
+        double t = 0;
     double dt = 0.016f;
     double CurrentTime = GetHiResolutionTime();
     double Accumulator = 0;
@@ -460,7 +460,6 @@ main(int argc,char **argv)
                             bgfx_init_ctor(&InitData);
                             bgfx_init(&InitData);
                             bgfx_reset(Renderer->Settings.Width, Renderer->Settings.Height, reset, InitData.resolution.format);
-                            bgfx_set_view_rect(0, 0, 0,Renderer->Settings.Width, Renderer->Settings.Height);
                         }break;
                         default:
                             break;
@@ -500,15 +499,15 @@ main(int argc,char **argv)
         {
             running = false;
         }
-        bgfx_set_view_rect(0, 0, 0, Renderer->Settings.Width, Renderer->Settings.Height);
         bgfx_touch(0);
 
-        hmm_mat4 mtx = HMM_Mat4d(1);
-        bgfx_set_transform(mtx.Elements,1);
+        bgfx_set_transform(HMM_Mat4d(1).Elements,1);
+        
+        bgfx_set_texture(0,s_texColor,Texture,UINT32_MAX);
         bgfx_set_vertex_buffer(0,VertexBuffer,0,ARRAYCOUNT(QuadVerticesColorTextured));
         bgfx_set_index_buffer(IndexBuffer,0,ARRAYCOUNT(QuadTriStrip));
-        uint64_t drawstate = (BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA| BGFX_STATE_PT_TRISTRIP);
-        bgfx_set_state(drawstate,0xffffffff);
+        uint64_t drawstate = (BGFX_STATE_WRITE_R | BGFX_STATE_WRITE_G | BGFX_STATE_WRITE_B | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_ALWAYS);
+        bgfx_set_state(drawstate,0);
         bgfx_submit(0,Program,0,false);
         
         bgfx_dbg_text_clear(0,false);
@@ -531,8 +530,6 @@ main(int argc,char **argv)
     bgfx_shutdown();
 
     SDL_Quit();
-    
-    while(bgfx_frame(false) != BGFX_RENDER_FRAME_NO_CONTEXT) {}
     
     return 0;
 }

@@ -8,6 +8,7 @@ mkdir build > NUL 2>NUL
 pushd build
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %bits% > NUL 2>NUL
 popd
+call "copy_assets.bat"
 call "make_shader.bat"
 cd build
 ctime -begin bgfx.ctm

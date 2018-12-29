@@ -2,8 +2,10 @@
 cd build
 mkdir shader > NUL 2>NUL
 cd ..
-set VS_FLAGS=--platform windows -p vs_3_0 -O 3
-set FS_FLAGS=--platform windows -p ps_3_0 -O 3
+REM set VS_FLAGS=--platform windows -p vs_3_0 -O 3
+REM set FS_FLAGS=--platform windows -p ps_3_0 -O 3
+set VS_FLAGS=--platform windows -p vs_4_0 -O 3
+set FS_FLAGS=--platform windows -p ps_4_0 -O 3
 VERIFY OTHER 2>nul
 SETLOCAL ENABLEDELAYEDEXPANSION
 SETLOCAL ENABLEEXTENSIONS
