@@ -1,2 +1,2 @@
 @echo off
-robocopy assets build /E > NUL 2>NUL
+xcopy assets build /E /Y > NUL 2>NUL

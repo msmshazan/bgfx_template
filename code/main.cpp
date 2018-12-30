@@ -310,12 +310,11 @@ bgfx_program_handle_t
 LoadShaderProgram(char *shadername)
 {
     char buf[256];
-    strcpy(buf,"shader\vs_");
+    strcpy(buf,"shader\\vs_");
     strcat(buf,shadername);
     strcat(buf,".bin");
     FileHandle VSFile = ReadEntireFile(buf);
-    buf[0] =0;
-    strcat(buf,"shader\fs_");
+    strcpy(buf,"shader\\fs_");
     strcat(buf,shadername);
     strcat(buf,".bin");
     FileHandle FSFile = ReadEntireFile(buf);
@@ -419,7 +418,7 @@ main(int argc,char **argv)
     bgfx_reset(Renderer->Settings.Width, Renderer->Settings.Height, reset, BGFX_TEXTURE_FORMAT_RGBA8);
     bgfx_set_debug(debug);
     bgfx_set_view_rect(0, 0, 0, Renderer->Settings.Width, Renderer->Settings.Height);    
-    bgfx_set_view_clear(0,BGFX_CLEAR_COLOR | BGFX_CLEAR_STENCIL | BGFX_CLEAR_DEPTH,0x0000ffff,1,0);       
+    bgfx_set_view_clear(0,BGFX_CLEAR_COLOR | BGFX_CLEAR_STENCIL | BGFX_CLEAR_DEPTH,0xffffffff,1,0);       
     
     VertexPostionColor QuadVertices[] =
         {
@@ -440,10 +439,10 @@ main(int argc,char **argv)
 
     VertexPostionColorTexture QuadVerticesColorTextured[] =
         {
-            { -1,1,0.9, 0,0 ,0xffffffff},
-            { 1,1,0.9, 1,0 ,0xffffffff},
-            { -1,-1,0.9, 0,1 ,0xffffffff},
-            { 1,-1,0.9, 1,1 ,0xffffffff},
+            { -1,1,1, 0,0 ,0x0000ffff},
+            { 1,1,1, 1,0 ,0x0000ffff},
+            { -1,-1,1, 0,1 ,0xffffffff},
+            { 1,-1,1, 1,1 ,0xffffffff},
         };
 
 
@@ -541,7 +540,7 @@ main(int argc,char **argv)
         bgfx_set_texture(0,s_texColor,Texture,UINT32_MAX);
         bgfx_set_vertex_buffer(0,VertexBuffer,0,ARRAYCOUNT(QuadVerticesColorTextured));
         bgfx_set_index_buffer(IndexBuffer,0,ARRAYCOUNT(QuadTriStrip));
-        uint64_t drawstate = (BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_BLEND_ALPHA);
+        uint64_t drawstate = (BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z );
         bgfx_set_state(drawstate,0);
         bgfx_submit(0,Program,0,false);
         
